@@ -1,0 +1,4 @@
+combinator TBN ComputeTBN(interface context) needs TANGENT, BINORMAL, NORMAL_T
+{
+	return float3x3(context.tangent, context.binormal, context.normal_t);
+}

@@ -1,0 +1,42 @@
+atom VOID None(interface context)
+{
+}
+
+atom NORMAL_W NormalFromInput(interface context) needs NORMAL_O
+{
+	return mul(context.normal_o, World);
+}
+
+atom NORMAL_W NormalFromMap(interface context) needs NORMAL_O, UV, TBN, MAP_NORMAL, SAMPLER_POINT
+{
+	float3 normal = map_normal.Sample(sampler_point, context.uv);
+	normal = mul(normal, context.tbn);
+	normal = normalize(context.normal_o + normal);
+
+	return normal;
+}
+
+atom DEPTH_P CalculateProjectionDepth(interface context) needs PROJPOSITION
+{
+	return context.projposition.z / context.projposition.w;
+}
+
+atom COLOR GammaTweak(interface context) needs COLOR
+{
+	return pow(float4(color, 1), 1/gamma);
+}
+
+atom ALPHA AlphaFromMap(interface context) needs UV, MAP_ALPHAMASK, SAMPLER_POINT
+{
+	return map_alphamask.Sample(sampler_point, context.uv).a;
+}
+
+atom ALBEDO AlbedoFromMap(interface context) needs UV, MAP_DIFFUSE, SAMPLER_LINEAR
+{
+	return map_diffuse.Sample(sampler_linear, context.uv).xyz;
+}
+
+atom SPECULAR_COLOR SpecularFromMap(interface context) needs UV, MAP_SPECULARCOLOR, SAMPLER_LINEAR
+{
+	return map_specularcolor.Sample(sampler_linear, context.uv).xyz;
+}

@@ -1,0 +1,74 @@
+cbuffer PerFrameLPrePass : register( b0 )
+{
+	matrix View;
+	matrix Projection;
+	vector Globals;
+};
+
+cbuffer PerSubset : register( b1 )
+{
+	matrix World;
+	vector DiffuseColor;
+};
+
+cbuffer GlobalProperties : register(b2)
+{
+	matrix InvViewProj;
+	vector ViewportSize;
+	vector CameraPosAndFarDist;
+};
+
+polymorphic GetAlpha
+{
+	None,
+	AlphaFromMap
+}
+
+polymorphic GetAlbedo
+{
+	None,
+	AlbedoFromMap
+}
+
+polymorphic GetSpecularColor
+{
+	None,
+	SpecularFromMap
+}
+
+pixel_shader float4 PS(PS_INPUT input) : SV_Target needs SAMPLER_POINT, MAP_LBUFFER
+{
+	static const float3 ambient = float3(0.1f, 0.1f, 0.1f);
+	static const float3 specularColor = float3(1, 1, 1);
+	static const float specularIntensity = 1;
+
+	context.uv = input.Position.xy / Globals.xy; 
+	
+	context.alpha = GetAlpha();
+	CONTEXT_IF(context.alpha){
+		//this is obviously always true but was added to show nested IFs
+		CONTEXT_IF(context.uv) {
+			if(context.alpha == 0)
+				discard;
+		}
+	}
+	
+	context.albedo = GetAlbedo();
+	CONTEXT_IFNOT(context.albedo) {
+		context.albedo = DiffuseColor.xyz;
+	}
+	
+	float4 lbuffer = map_lbuffer.Sample(sampler_point, context.uv);
+
+	context.specular_color = GetSpecularColor();
+	CONTEXT_IFNOT(context.specular_color) {
+		context.specular_color = specularColor;
+	}
+	
+	float3 color = ambient*context.albedo  + (lbuffer.xyz * context.albedo  + lbuffer.w*context.specular_color*specularIntensity);
+
+	// ouput LUMA for AA
+	float luma = sqrt(dot(color.rgb, float3(0.299, 0.587, 0.114)));
+
+	return float4(color, luma);	
+}

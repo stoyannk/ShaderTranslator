@@ -1,0 +1,67 @@
+//texture inputs 
+Texture2D map_normal : register(t0);
+SamplerState sampler_point : register(s0);
+//sampler inputs 
+//input 
+struct PS_INPUT { 
+float4 Position : SV_POSITION;
+float3 binormal : TEXCOORD0;
+float3 normal_o : TEXCOORD1;
+float3 normal_t : TEXCOORD2;
+float4 projposition : TEXCOORD3;
+float3 tangent : TEXCOORD4;
+float2 uv : TEXCOORD5;
+float3 vertex_color : TEXCOORD6;
+};
+
+float4 PS(PS_INPUT input) : SV_Target
+{
+
+	struct {
+		float3 binormal;
+		float depth_p;
+		float3 normal_o;
+		float3 normal_t;
+		float3 normal_w;
+		float4 projposition;
+		float3 tangent;
+		float3x3 tbn;
+		float2 uv;
+		float3 vertex_color;
+	} context;
+
+	//context population 
+	context.binormal = input.binormal;
+	context.normal_o = input.normal_o;
+	context.normal_t = input.normal_t;
+	context.projposition = input.projposition;
+	context.tangent = input.tangent;
+	context.uv = input.uv;
+	context.vertex_color = input.vertex_color;
+
+
+
+{ // CalculateProjectionDepth
+	context.depth_p = context.projposition.z / context.projposition.w;
+}
+
+
+
+{ // ComputeTBN
+	context.tbn = float3x3(context.tangent, context.binormal, context.normal_t);
+}
+
+{ // NormalFromMap
+	float3 normal = map_normal.Sample(sampler_point, context.uv);
+	normal = mul(normal, context.tbn);
+	normal = normalize(context.normal_o + normal);
+
+	context.normal_w = normal;
+}
+
+
+	return float4(context.normal_w.x
+		    , context.normal_w.y
+		    , context.normal_w.z
+		    , context.depth_p);
+}

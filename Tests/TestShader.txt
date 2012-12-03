@@ -1,0 +1,34 @@
+polymorphic Gamma
+{
+	None,
+	GammaTweak
+}
+
+cbuffer Global
+{
+	float gamma;
+}
+
+pixel_shader float4 PS(PS_INPUT input) : SV_Target
+{
+	static float3 ambient = float3(0.15f, 0.15f, 0.15f);
+	static float3 specularColor = float3(0.5, 0.5, 0.5);
+	static const float specularIntensity = 1;
+
+	float2 uv = input.Pos.xy / Globals.xy;
+
+	float3 albedo = txDiffuse.Sample(samLinear, input.Tex).xyz;
+
+	#ifdef GAMMA_TWEAK
+	albedo = pow(albedo, gamma);
+	ambient = pow(ambient, gamma);
+	#endif
+
+	float4 lbuffer = txLBuffer.Sample(samLinear, uv);
+
+	context.color = ambient*albedo + (lbuffer.xyz * albedo + lbuffer.w*specularColor*specularIntensity);
+		
+	context.color = Gamma();
+	
+	return float4(context.color.rgb, 1);
+}

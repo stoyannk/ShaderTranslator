@@ -1,0 +1,22 @@
+polymorphic MakeDepth
+{
+	CalculateProjectionDepth
+}
+
+polymorphic GetWorldNormal
+{
+	NormalFromInput,
+	NormalFromMap
+}
+
+pixel_shader float4 PS(PS_INPUT input) : SV_Target needs VERTEX_COLOR
+{
+	context.depth_p = MakeDepth();
+
+	context.normal_w = GetWorldNormal();
+
+	return float4(context.normal_w.x
+		    , context.normal_w.y
+		    , context.normal_w.z
+		    , context.depth_p);
+}
