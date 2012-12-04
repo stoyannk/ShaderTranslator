@@ -1,8 +1,5 @@
-// stdafx.cpp : source file that includes just the standard includes
-// Translator.pch will be the pre-compiled header
-// stdafx.obj will contain the pre-compiled type information
-
+//
+// Copyright 2012 Stoyan Nikolov. All rights reserved.
+// Licensed under: http://www.opensource.org/licenses/BSD-2-Clause
+//
 #include "stdafx.h"
-
-// TODO: reference any additional headers you need in STDAFX.H
-// and not in this file
